@@ -116,80 +116,118 @@
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = 'onePlayAudio.v1'; // change this to reset plays
-    const state = loadState();
+ <script>
+  const STORAGE_KEY = 'onePlayAudio.v1'; // change to reset plays
+  const state = loadState();
 
-    initCard('audio1');
-    initCard('audio2');
+  initCard('audio1');
+  initCard('audio2');
 
-    function initCard(id){
-      const card = document.querySelector(`.card[data-audio-id="${id}"]`);
-      const audio = document.getElementById(id);
-      const playBtn = card.querySelector('.play-btn');
-      const statusEl = card.querySelector('.status');
-      const progressBar = card.querySelector('.progress-bar');
+  function initCard(id){
+    const card = document.querySelector(`.card[data-audio-id="${id}"]`);
+    const audio = document.getElementById(id);
+    const playBtn = card.querySelector('.play-btn');
+    const statusEl = card.querySelector('.status');
+    const progressBar = card.querySelector('.progress-bar');
 
-      if (isLocked(id)) lockUI();
-      else statusEl.textContent = 'Ready';
+    // No native controls
+    audio.removeAttribute('controls');
+    audio.loop = false;
 
-      playBtn.addEventListener('click', async () => {
-        if (isLocked(id)) return;
-        lockNow(id);
-        lockUI();
-        await startPlayback(audio, statusEl);
-      });
+    if (isLocked(id)) lockUI();
+    else statusEl.textContent = 'Ready';
 
-      audio.addEventListener('timeupdate', () => {
-        if (audio.duration) {
-          const progress = (audio.currentTime / audio.duration) * 100;
-          progressBar.style.width = `${progress}%`;
+    // Only lock AFTER playback actually starts
+    playBtn.addEventListener('click', async () => {
+      if (isLocked(id)) return;
+
+      statusEl.textContent = 'Starting…';
+      try {
+        // Ensure the browser has loaded enough to start
+        if (isNaN(audio.duration)) {
+          // Kick the pipeline; some browsers want an explicit load
+          audio.load();
         }
-      });
-
-      audio.addEventListener('ended', () => {
-        markCompleted(id);
-        progressBar.style.width = '100%';
-        statusEl.textContent = 'Finished';
-      });
-
-      function lockUI(){
-        playBtn.disabled = true;
-        playBtn.textContent = 'Access used';
-        const meta = getStateFor(id);
-        statusEl.textContent = meta.lockedAt ? `Locked since ${new Date(meta.lockedAt).toLocaleString()}` : 'Locked';
-        statusEl.classList.add('locked');
+        await audio.play();            // <- user gesture, should be allowed
+        onPlaybackStarted();           // success → lock + UI
+      } catch (err) {
+        // Do NOT lock. Let them click again.
+        console.warn('Playback failed:', err);
+        statusEl.textContent = 'Click again to start audio (browser blocked it).';
       }
-    }
+    });
 
-    async function startPlayback(audio, statusEl){
+    // When the audio actually starts playing, lock & update UI
+    function onPlaybackStarted(){
+      lockNow(id);
+      lockUI();
       statusEl.textContent = 'Playing…';
       statusEl.classList.add('ok');
-      try { await audio.play(); }
-      catch { statusEl.textContent = 'Click the page to start audio.'; }
     }
 
-    function loadState(){
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-      catch { return {}; }
+    // Progress bar
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
+    });
+
+    // Prevent seeking (just in case)
+    let lastTime = 0;
+    audio.addEventListener('timeupdate', () => { lastTime = audio.currentTime || 0; });
+    audio.addEventListener('seeking', () => {
+      if (Math.abs(audio.currentTime - lastTime) > 1) audio.currentTime = lastTime;
+    });
+
+    // Auto-resume if paused mid-stream (not after end)
+    audio.addEventListener('pause', () => {
+      if (!audio.ended && isLocked(id)) {
+        audio.play().catch(()=>{}); // ignore if browser blocks
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      markCompleted(id);
+      progressBar.style.width = '100%';
+      statusEl.textContent = 'Finished';
+      statusEl.classList.remove('ok');
+    });
+
+    function lockUI(){
+      playBtn.disabled = true;
+      playBtn.textContent = 'Access used';
+      const meta = getStateFor(id);
+      statusEl.textContent = meta.lockedAt
+        ? `Locked since ${new Date(meta.lockedAt).toLocaleString()}`
+        : 'Locked';
+      statusEl.classList.add('locked');
     }
-    function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    function getStateFor(id){
-      state[id] = state[id] || { lockedAt:null, started:false, completed:false };
-      return state[id];
-    }
-    function isLocked(id){ return !!getStateFor(id).started; }
-    function lockNow(id){
-      const s = getStateFor(id);
-      s.started = true;
-      s.lockedAt = Date.now();
-      saveState();
-    }
-    function markCompleted(id){
-      const s = getStateFor(id);
-      s.completed = true;
-      saveState();
-    }
-  </script>
+  }
+
+  // --- Persistence helpers ---
+  function loadState(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  }
+  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function getStateFor(id){
+    state[id] = state[id] || { lockedAt:null, started:false, completed:false };
+    return state[id];
+  }
+  function isLocked(id){ return !!getStateFor(id).started; }
+  function lockNow(id){
+    const s = getStateFor(id);
+    s.started = true;
+    s.lockedAt = Date.now();
+    saveState();
+  }
+  function markCompleted(id){
+    const s = getStateFor(id);
+    s.completed = true;
+    saveState();
+  }
+</script>
+
 </body>
 </html>
