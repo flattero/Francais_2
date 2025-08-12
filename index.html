@@ -6,14 +6,14 @@
   <title>Listening Assessment — One Play Only</title>
   <style>
     :root{
-      --bg:#0f172a;         /* slate-900 */
-      --card:#111827;       /* gray-900 */
-      --muted:#94a3b8;      /* slate-400 */
-      --text:#e5e7eb;       /* gray-200 */
-      --accent:#22d3ee;     /* cyan-400 */
-      --accent-2:#38bdf8;   /* sky-400 */
-      --danger:#ef4444;     /* red-500 */
-      --ok:#10b981;         /* emerald-500 */
+      --bg:#0f172a;         
+      --card:#111827;       
+      --muted:#94a3b8;      
+      --text:#e5e7eb;       
+      --accent:#22d3ee;     
+      --accent-2:#38bdf8;   
+      --danger:#ef4444;     
+      --ok:#10b981;         
       --shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
       --radius: 20px;
     }
@@ -24,14 +24,12 @@
                   radial-gradient(1200px 600px at 110% 10%, #0b3b46 0, transparent 60%),
                   var(--bg);
       color:var(--text);
-      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial;
       display:flex; align-items:center; justify-content:center;
       padding: 24px;
     }
     .wrap{max-width:900px; width:100%}
-    header{
-      text-align:center; margin-bottom:24px;
-    }
+    header{text-align:center; margin-bottom:24px;}
     h1{font-size: clamp(24px, 4vw, 36px); margin:0 0 8px}
     p.sub{color:var(--muted); margin:0}
     .grid{
@@ -44,8 +42,6 @@
       border-radius: var(--radius);
       padding: 18px;
       box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
     }
     .title{font-weight:700; font-size: 18px; margin-bottom: 6px}
     .meta{color:var(--muted); font-size:14px; margin-bottom: 14px}
@@ -58,85 +54,71 @@
       cursor: pointer;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
       color:#06202a;
-      transition: transform .05s ease, opacity .2s ease, filter .2s ease;
+      transition: transform .05s ease, opacity .2s ease;
       box-shadow: 0 8px 20px rgba(34,211,238,.25);
     }
     .btn:active{ transform: translateY(1px) scale(.99) }
     .btn[disabled]{ opacity:.5; cursor: not-allowed; filter: grayscale(30%) }
-    .status{
-      font-size: 13px; color: var(--muted);
-    }
+    .status{font-size: 13px; color: var(--muted);}
     .status.ok{ color: var(--ok); font-weight:600 }
     .status.locked{ color: var(--danger); font-weight:600 }
     .pill{
       display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px;
       border:1px solid rgba(255,255,255,.12); color:var(--muted)
     }
-    footer{
-      margin-top:18px; text-align:center; color:var(--muted); font-size:12px
+    .progress-container{
+      width: 100%; height: 8px; background: rgba(255,255,255,0.1);
+      border-radius: 5px; overflow: hidden; margin-top: 10px;
+    }
+    .progress-bar{
+      height: 100%; width: 0%; background: var(--accent-2);
+      transition: width 0.2s linear;
     }
     .warn{
       border-left: 3px solid var(--danger);
       padding-left:10px; margin: 12px 0 0; color: var(--muted); font-size: 13px;
     }
-    .hidden{ display:none !important }
-    /* Prevent text selection/dragging to discourage odd UX */
-    *{ -webkit-user-drag: none; user-select:none }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>Listening Assessment</h1>
-      <p class="sub">Each audio can be played <strong>once only</strong> in this browser. Refreshing the page won’t reset access.</p>
+      <p class="sub">Each audio can be played <strong>once only</strong> in this browser. Refreshing will not reset access.</p>
     </header>
 
     <div class="grid">
-      <!-- Card 1 -->
+      <!-- Audio 1 -->
       <section class="card" data-audio-id="audio1">
         <div class="title">Audio 1: Conversation</div>
-        <div class="meta">
-          <span class="pill">One-time access</span>
-        </div>
+        <div class="meta"><span class="pill">One-time access</span></div>
         <div class="btn-row">
           <button class="btn play-btn">Play once</button>
           <span class="status">Ready</span>
         </div>
+        <div class="progress-container"><div class="progress-bar"></div></div>
         <p class="warn">Do not leave or refresh this page once playback begins.</p>
         <audio id="audio1" preload="metadata" src="audio1.mp3"></audio>
       </section>
 
-      <!-- Card 2 -->
+      <!-- Audio 2 -->
       <section class="card" data-audio-id="audio2">
         <div class="title">Audio 2: Announcement</div>
-        <div class="meta">
-          <span class="pill">One-time access</span>
-        </div>
+        <div class="meta"><span class="pill">One-time access</span></div>
         <div class="btn-row">
           <button class="btn play-btn">Play once</button>
           <span class="status">Ready</span>
         </div>
+        <div class="progress-container"><div class="progress-bar"></div></div>
         <p class="warn">Do not leave or refresh this page once playback begins.</p>
         <audio id="audio2" preload="metadata" src="audio2.mp3"></audio>
       </section>
     </div>
-
-    <footer>
-      Tip: Use a private/incognito window if you’re testing as a teacher; students should use a normal window.
-    </footer>
   </div>
 
   <script>
-    // Basic tamper deterrence (can still be bypassed by determined users)
-    document.addEventListener('contextmenu', e => e.preventDefault(), {capture:true});
-    document.addEventListener('keydown', e => {
-      // Block common media keys and spacebar from pausing
-      const blocked = ['MediaPlayPause','MediaTrackPrevious','MediaTrackNext',' '];
-      if (blocked.includes(e.key)) e.preventDefault();
-    }, {capture:true});
-
-    const STORAGE_KEY = 'onePlayAudio.v1'; // bump version if you change logic
-    const state = loadState(); // { audio1:{lockedAt:..., started:true, completed:true}, ... }
+    const STORAGE_KEY = 'onePlayAudio.v1'; // change this to reset plays
+    const state = loadState();
 
     initCard('audio1');
     initCard('audio2');
@@ -146,46 +128,28 @@
       const audio = document.getElementById(id);
       const playBtn = card.querySelector('.play-btn');
       const statusEl = card.querySelector('.status');
+      const progressBar = card.querySelector('.progress-bar');
 
-      // Harden the element: no native controls, no loop
-      audio.removeAttribute('controls');
-      audio.loop = false;
-      audio.controls = false;
-
-      // If already locked, reflect UI
-      if (isLocked(id)) {
-        lockUI();
-      } else {
-        statusEl.textContent = 'Ready';
-      }
+      if (isLocked(id)) lockUI();
+      else statusEl.textContent = 'Ready';
 
       playBtn.addEventListener('click', async () => {
         if (isLocked(id)) return;
-        // Immediately lock on first user-initiated play
         lockNow(id);
         lockUI();
         await startPlayback(audio, statusEl);
       });
 
-      // Auto-resume if a pause happens mid-stream (until ended)
-      audio.addEventListener('pause', () => {
-        if (!audio.ended && isLocked(id)) {
-          // try to resume; ignore if browser blocks
-          audio.play().catch(()=>{});
-        }
-      });
-
-      // Prevent seeking by forcing back to last known position (controls hidden anyway)
-      let lastTime = 0;
-      audio.addEventListener('timeupdate', () => lastTime = audio.currentTime || 0);
-      audio.addEventListener('seeking', () => {
-        if (Math.abs(audio.currentTime - lastTime) > 1) {
-          audio.currentTime = lastTime;
+      audio.addEventListener('timeupdate', () => {
+        if (audio.duration) {
+          const progress = (audio.currentTime / audio.duration) * 100;
+          progressBar.style.width = `${progress}%`;
         }
       });
 
       audio.addEventListener('ended', () => {
         markCompleted(id);
+        progressBar.style.width = '100%';
         statusEl.textContent = 'Finished';
       });
 
@@ -193,8 +157,7 @@
         playBtn.disabled = true;
         playBtn.textContent = 'Access used';
         const meta = getStateFor(id);
-        const when = meta.lockedAt ? new Date(meta.lockedAt).toLocaleString() : '';
-        statusEl.textContent = when ? `Locked since ${when}` : 'Locked';
+        statusEl.textContent = meta.lockedAt ? `Locked since ${new Date(meta.lockedAt).toLocaleString()}` : 'Locked';
         statusEl.classList.add('locked');
       }
     }
@@ -202,19 +165,13 @@
     async function startPlayback(audio, statusEl){
       statusEl.textContent = 'Playing…';
       statusEl.classList.add('ok');
-      try{
-        await audio.play();
-      }catch(err){
-        statusEl.textContent = 'Click allowed, but autoplay was blocked. Click the page once more.';
-      }
+      try { await audio.play(); }
+      catch { statusEl.textContent = 'Click the page to start audio.'; }
     }
 
-    // --- Persistence helpers ---
     function loadState(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
-      }catch{ return {}; }
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch { return {}; }
     }
     function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     function getStateFor(id){
@@ -233,10 +190,6 @@
       s.completed = true;
       saveState();
     }
-
-    // Optional: surface a simple fingerprint hint to discourage switching tabs/devices
-    // (purely informational, not enforced)
-    console.log('One-play audio initialized. Storage key:', STORAGE_KEY);
   </script>
 </body>
 </html>
